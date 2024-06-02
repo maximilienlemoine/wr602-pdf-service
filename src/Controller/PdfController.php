@@ -29,21 +29,24 @@ class PdfController extends AbstractController
      * @throws RedirectionExceptionInterface
      * @throws ClientExceptionInterface
      */
-    #[Route('/pdf/generate/html', name: 'html_generate_pdf', methods: ['POST'])]
+    #[Route('/pdf/generate/file', name: 'html_generate_pdf', methods: ['POST'])]
     public function generatePdfFromHtml(Request $request): StreamedResponse
     {
-        $file = $request->files->get('html');
+        $file = $request->files->get('file');
 
         if (!is_dir($this->publicTempAbsoluteDirectory)) {
             mkdir($this->publicTempAbsoluteDirectory, 0777, true);
         }
 
-        $file->move($this->publicTempAbsoluteDirectory, $file->getClientOriginalName());
-        $filePath = $this->publicTempAbsoluteDirectory.'/'.$file->getClientOriginalName();
+        $subDirectory = $this->publicTempAbsoluteDirectory . '/' . uniqid();
+        mkdir($subDirectory, 0777, true);
+
+        $file->move($subDirectory, 'index.html');
+        $filePath = $subDirectory.'/'.'index.html';
 
         chmod($filePath, 0777);
         $content = $this->generatePdfService->generatePdfFromHtml($filePath);
-        unlink($filePath); // Supprimer le fichier après utilisation
+        unlink($filePath); // Supprimer le fichier et le dossier après utilisation
 
         return new StreamedResponse(function () use ($content) {
             header('Content-Type: application/pdf');
@@ -65,5 +68,4 @@ class PdfController extends AbstractController
             echo $this->generatePdfService->generatePdfFromUrl($url);
         });
     }
-
 }
