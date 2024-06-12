@@ -44,5 +44,4 @@ class GotenbergHttpClient
 
         return $response->getContent();
     }
-
 }
